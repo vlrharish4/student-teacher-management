@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
 import java.util.Set;
 
 @RestController
@@ -40,21 +41,41 @@ public class SchoolController {
     //add student to a teacher
     @PostMapping("/teacher/{teacherId}/addStudent")
     public ResponseEntity<Teacher> addStudent(@PathVariable(value = "teacherId") Long teacherId, @RequestBody Student addStudent) {
-        //TODO
-        return null;
+        // Fetch teacher by ID
+        Teacher teacher = teacherRepository.findById(teacherId).get();
+        
+        // Check if student exists
+        Optional<Student> studentExists = studentRepository.findById(addStudent.getId());
+        // If student doesn't exist, perists.
+        if(!studentExists.isPresent()) {
+            studentRepository.save(addStudent);
+        }
+
+        // Append student object to students of teacher.
+        teacher.getStudents().add(addStudent);
+
+        // Update teacher object.
+        Teacher updatedTeacher = teacherRepository.save(teacher);
+
+        // Return updated teacher entity
+        return new ResponseEntity<>(updatedTeacher, HttpStatus.CREATED);
     }
 
     //get students of a teacher
     @GetMapping("/teacher/{teacherId}/students")
     public ResponseEntity<Set<Student>> getStudentsOfATeacher(@PathVariable(value = "teacherId") Long teacherId) {
-        //TODO
-        return null;
+        // Fetch teacher by ID
+        Teacher teacher = teacherRepository.findById(teacherId).get();
+        // Return with 200 status
+        return new ResponseEntity<>(teacher.getStudents(), HttpStatus.OK);
     }
 
     // get teachers of a student
     @GetMapping("/student/{studentId}/teachers")
     public ResponseEntity<Set<Teacher>> getTeachersOfAStudent(@PathVariable(value = "studentId") Long studentId) {
-        //TODO
-        return null;
+        // Fetch student by ID
+        Student student = studentRepository.findById(studentId).get();
+        // Return with 200 status
+        return new ResponseEntity<>(student.getTeachers(), HttpStatus.OK);
     }
 }
